@@ -1,0 +1,22 @@
+To use XPlaneRemote app, you must copy the plugin folder 'AndroidPanel' into your
+X-Plane plugin folder. Typically this is found at 'XPlane10/Resources/plugins'.
+
+Platforms supported by this plugin:
+    Linux 32bit
+    Linux 64bit
+    Windows 32bit
+    Windows 64bit
+    OS-X 64bit
+
+## Contact / Feedback ##
+
+Original Author:
+- Ville Ranki <ville.ranki@iki.fi>
+
+Contributors:
+- Dan Krusi <dan.krusi@nerves.ch>
+- Bob Gates
+
+License:
+
+* GNU GPLv3
