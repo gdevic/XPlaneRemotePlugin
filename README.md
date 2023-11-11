@@ -14,3 +14,13 @@ Over the years, these plugins have been verified and tested, on Windows OS, with
 Download Android application:
 
 https://play.google.com/store/apps/details?id=org.baltazar.XPlaneRemotePlus2
+
+------------------------------------------------------------------------------
+# XPlaneRemotePlus2
+Flight Sim Remote Panel application compiled for Windows OS.
+
+You may need to install Microsoft VC redistributable package from here:
+
+Flight Sim Remote Panel application
+
+https://aka.ms/vs/17/release/vc_redist.x64.exe
