@@ -8,7 +8,7 @@ https://baltazarstudios.com/flight-sim-remote-panel
 
 The Android APK is in the APK directory. Side-load this APK into your Android device.
 
-This is the Android Play version of the same APK, but that one has been obsoleted:
+This is the app on the Google Play site:
 
 https://play.google.com/store/apps/details?id=org.baltazar.XPlaneRemotePlus2
 
@@ -20,8 +20,6 @@ Over the years, this application and the plugins have been verified and tested o
 - X-Plane v11
 - X-Plane v10
 - X-Plane v9
-
-For MacOS, you can also download its plugin here: https://github.com/dankrusi/ExtPlane-Panel/releases/tag/v0.1
 
 # XPlaneRemotePlus2
 This is the application compiled for Windows OS.
