@@ -24,7 +24,7 @@ Over the years, this application and the plugins have been verified and tested o
 # XPlaneRemotePlus2
 This is the application compiled for Windows OS.
 
-You may need to install the Microsoft VC redistributable package from here:
+You may need to install the latest Microsoft VC redistributable package from here:
 
 https://aka.ms/vs/17/release/vc_redist.x64.exe
 
