@@ -1,0 +1,675 @@
+<title>Remote Panel 2 — Connection Troubleshooting</title>
+<style>
+  :root {
+    /* Neutrals carry a slight teal bias toward the accent */
+    --ground:      #F0F2F1;
+    --surface:     #FFFFFF;
+    --surface-alt: #E7EBEA;
+    --ink:         #16211F;
+    --ink-muted:   #56635F;
+    --rule:        #C6CFCC;
+    --rule-strong: #9BA8A4;
+
+    /* Accent: EFIS cyan — avionics "selected value" colour */
+    --accent:      #0E6F6C;
+    --accent-soft: #DCEDEB;
+
+    /* Semantic: airspeed-indicator arc markings */
+    --ok:          #2E7D46;
+    --ok-soft:     #DFEDE3;
+    --caution:     #9A6304;
+    --caution-soft:#F5E8CE;
+    --stop:        #A82A22;
+    --stop-soft:   #F5DEDB;
+
+    --display: "Bahnschrift", "DIN Alternate", "Avenir Next Condensed", "Roboto Condensed", "Helvetica Neue", system-ui, sans-serif;
+    --body: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, ui-sans-serif, sans-serif;
+    --data: "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:      #111716;
+      --surface:     #19201F;
+      --surface-alt: #212A28;
+      --ink:         #E3E9E7;
+      --ink-muted:   #94A19D;
+      --rule:        #2E3937;
+      --rule-strong: #46534F;
+      --accent:      #4FD1C9;
+      --accent-soft: #14302E;
+      --ok:          #57B473;
+      --ok-soft:     #16301F;
+      --caution:     #DDA43A;
+      --caution-soft:#332714;
+      --stop:        #EE7B72;
+      --stop-soft:   #351A18;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #111716;
+    --surface:     #19201F;
+    --surface-alt: #212A28;
+    --ink:         #E3E9E7;
+    --ink-muted:   #94A19D;
+    --rule:        #2E3937;
+    --rule-strong: #46534F;
+    --accent:      #4FD1C9;
+    --accent-soft: #14302E;
+    --ok:          #57B473;
+    --ok-soft:     #16301F;
+    --caution:     #DDA43A;
+    --caution-soft:#332714;
+    --stop:        #EE7B72;
+    --stop-soft:   #351A18;
+  }
+
+  :root[data-theme="light"] {
+    --ground:      #F0F2F1;
+    --surface:     #FFFFFF;
+    --surface-alt: #E7EBEA;
+    --ink:         #16211F;
+    --ink-muted:   #56635F;
+    --rule:        #C6CFCC;
+    --rule-strong: #9BA8A4;
+    --accent:      #0E6F6C;
+    --accent-soft: #DCEDEB;
+    --ok:          #2E7D46;
+    --ok-soft:     #DFEDE3;
+    --caution:     #9A6304;
+    --caution-soft:#F5E8CE;
+    --stop:        #A82A22;
+    --stop-soft:   #F5DEDB;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  /* ---- Masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .eyebrow {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 6vw, 2.9rem);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  /* ---- Orientation panel ---- */
+  .brief {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    padding: 1.35rem 1.5rem;
+  }
+
+  .brief-notes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.95rem; }
+  /* Block, not flex: inline <strong>/<code> inside a flex item would each
+     become separate flex items and break the sentence into columns. */
+  .brief-notes li { position: relative; padding-left: 1.15rem; }
+  .brief-notes li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 0.45rem; height: 0.45rem;
+    background: var(--accent);
+    transform: rotate(45deg);
+  }
+
+  /* ---- Section headings ---- */
+  h2 {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  /* ---- Preflight checklist with dot leaders ---- */
+  .checklist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .cl-row { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.95rem; }
+
+  .cl-dots {
+    flex: 1 1 1.5rem;
+    min-width: 1.5rem;
+    border-bottom: 1px dotted var(--rule-strong);
+    transform: translateY(-0.25em);
+  }
+
+  .cl-action {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.82rem;
+    color: var(--accent);
+    text-align: right;
+    flex: none;
+  }
+
+  /* ---- Ordered diagnostic steps ---- */
+  .steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2rem; counter-reset: step; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2.75rem 1fr;
+    gap: 0 1.25rem;
+    counter-increment: step;
+  }
+
+  .step::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--display);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    border-top: 2px solid var(--rule-strong);
+    padding-top: 0.35rem;
+  }
+
+  .step h3 {
+    font-family: var(--display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.4rem;
+    text-wrap: balance;
+  }
+
+  .step-body > p { margin: 0 0 0.75rem; }
+  .step-body > p:last-child { margin-bottom: 0; }
+  .step-body > ul { margin: 0 0 0.85rem; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+
+  /* ---- Per-platform blocks ---- */
+  .platforms { display: flex; flex-direction: column; gap: 0.85rem; margin: 0 0 0.85rem; }
+
+  .platform {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.35rem 1rem;
+    align-items: start;
+    border-left: 1px solid var(--rule-strong);
+    padding-left: 1rem;
+  }
+
+  .plat-label {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    padding-top: 0.2rem;
+  }
+
+  .plat-body > p { margin: 0 0 0.6rem; font-size: 0.95rem; }
+  .plat-body > p:last-child { margin-bottom: 0; }
+  .plat-body > pre:last-child { margin-bottom: 0; }
+
+  @media (max-width: 34rem) {
+    .platform { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Code / log blocks ---- */
+  pre, code, kbd { font-family: var(--data); font-variant-numeric: tabular-nums; }
+
+  pre {
+    background: var(--surface-alt);
+    border: 1px solid var(--rule);
+    padding: 0.85rem 1rem;
+    margin: 0 0 0.7rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+
+  p > code, li > code, .cl-row code {
+    background: var(--surface-alt);
+    border: 1px solid var(--rule);
+    padding: 0.05em 0.35em;
+    font-size: 0.86em;
+    white-space: nowrap;
+  }
+
+  /* ---- Annunciator panel ---- */
+  .annunciators { display: flex; flex-direction: column; gap: 1rem; }
+
+  .annunciator {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    gap: 0.5rem 1.25rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 1rem 1.15rem;
+  }
+
+  .legend {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid currentColor;
+  }
+
+  .legend.is-stop    { color: var(--stop);    background: var(--stop-soft); }
+  .legend.is-caution { color: var(--caution); background: var(--caution-soft); }
+  .legend.is-ok      { color: var(--ok);      background: var(--ok-soft); }
+
+  .annunciator p { margin: 0; font-size: 0.95rem; }
+  .annunciator .cause { font-weight: 600; }
+  .annunciator .fix { color: var(--ink-muted); margin-top: 0.25rem; }
+
+  @media (max-width: 34rem) {
+    .annunciator { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Screenshot figure ---- */
+  .shot { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--rule-strong);
+  }
+
+  .shot figcaption {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ink-muted);
+  }
+
+  /* ---- Advisory: single deep-dive condition ---- */
+  .advisory {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--caution);
+    padding: 1.5rem;
+    scroll-margin-top: 1.5rem;
+  }
+  .advisory h2 { border-bottom-color: var(--rule); }
+  .advisory p { margin: 0 0 0.8rem; }
+  .advisory p:last-child { margin-bottom: 0; }
+  .advisory .sub {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--caution);
+    margin: 1.4rem 0 0.55rem;
+  }
+  .advisory .sub:first-of-type { margin-top: 0; }
+  .advisory .note {
+    border-left: 2px solid var(--caution);
+    padding-left: 0.85rem;
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+  }
+
+  /* ---- Closing note ---- */
+  .cleared {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    padding: 1.15rem 1.35rem;
+  }
+  .cleared h2 { border-bottom-color: var(--accent); margin-bottom: 0.75rem; }
+  .cleared ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.95rem; }
+
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  strong { font-weight: 600; }
+
+  /* ---- Print / PDF ---- */
+  @media print {
+    /* Beat :root[data-theme="…"] so a dark viewer still prints light */
+    :root, :root[data-theme="dark"], :root[data-theme="light"] {
+      --ground:      #FFFFFF;
+      --surface:     #FFFFFF;
+      --surface-alt: #F1F4F3;
+      --ink:         #101A19;
+      --ink-muted:   #47534F;
+      --rule:        #B7C2BF;
+      --rule-strong: #7F8D89;
+      --accent:      #0B5F5C;
+      --accent-soft: #EDF5F4;
+      --ok:          #226336;
+      --ok-soft:     #EAF3EC;
+      --caution:     #7A5003;
+      --caution-soft:#FAF1DC;
+      --stop:        #8C1F18;
+      --stop-soft:   #FAE8E6;
+    }
+
+    @page { margin: 15mm 14mm; }
+
+    body { background: #FFFFFF; font-size: 10.5pt; line-height: 1.5; }
+    .wrap { max-width: none; margin: 0; padding: 0; gap: 1.5rem; }
+
+    h1 { font-size: 23pt; }
+    h2 { font-size: 11pt; }
+    .step h3 { font-size: 12.5pt; }
+    h1, h2, .step h3, .advisory .sub { break-after: avoid; }
+
+    /* Nothing scrolls on paper — wrap long commands instead */
+    pre { white-space: pre-wrap; word-break: break-word; overflow-x: visible; font-size: 8.5pt; }
+
+    /* Keep only small, atomic things whole. Applying this to the big panels
+       (.brief, .cleared, .advisory) strands large blank areas when they don't
+       fit the remaining space, so let those split across pages instead. */
+    .annunciator, .platform, .shot, pre { break-inside: avoid; }
+
+    /* Prevents stray single lines without pushing whole blocks to a new page */
+    p, li { orphans: 3; widows: 3; }
+
+    .shot img { width: auto; max-width: 100%; max-height: 90mm; }
+
+    a { color: inherit; text-decoration: underline; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Remote Panel 2 &middot; ExtPlane Plugin</span>
+    <h1>The app won't connect to X&#8209;Plane</h1>
+    <p class="standfirst">Work through this in order. Each step rules out a whole category of cause, so stopping at the first failure tells you where the problem is.</p>
+  </header>
+
+  <section class="brief" aria-label="Before you start">
+    <ul class="brief-notes">
+      <li>Everything happens over a single connection to the computer running X&#8209;Plane, on TCP port <strong>51000</strong>. There is no second port, and nothing uses UDP.</li>
+      <li>Nothing needs opening on the tablet &mdash; only on the computer.</li>
+      <li>The port isn't adjustable in the app, so it can't be set wrongly. The address is the only thing you enter.</li>
+      <li>The plugin accepts connections on every network interface, so it isn't limited to the computer it runs on.</li>
+    </ul>
+  </section>
+
+  <section aria-label="Preflight check">
+    <h2>Preflight check</h2>
+    <ul class="checklist">
+      <li class="cl-row"><span>X&#8209;Plane <code>Log.txt</code></span><span class="cl-dots"></span><span class="cl-action">Listening on 51000</span></li>
+      <li class="cl-row"><span>Test from the X&#8209;Plane computer itself</span><span class="cl-dots"></span><span class="cl-action">Connects</span></li>
+      <li class="cl-row"><span>Firewall</span><span class="cl-dots"></span><span class="cl-action">Incoming TCP allowed</span></li>
+      <li class="cl-row"><span>Tablet and computer</span><span class="cl-dots"></span><span class="cl-action">Same Wi&#8209;Fi</span></li>
+      <li class="cl-row"><span>Status line in the app</span><span class="cl-dots"></span><span class="cl-action">Read it</span></li>
+    </ul>
+  </section>
+
+  <section aria-label="Diagnostic steps">
+    <h2>Step by step</h2>
+    <ol class="steps">
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Confirm the plugin started</h3>
+          <p>Open <code>Log.txt</code> in your X&#8209;Plane folder and search for <code>ExtPlane-Plugin</code>. Three lines confirm a healthy start:</p>
+          <pre>ExtPlane-Plugin: Plugin enabled
+ExtPlane-Plugin: Successfully bound to port
+ExtPlane-Plugin: Listening on port 51000</pre>
+          <p>If you see <code>BIND FAILED</code> instead, the next line names the reason. There are two, and they need different fixes:</p>
+          <ul>
+            <li><strong>Port is already in use</strong> (error 10048) &mdash; something else has it, usually a second copy of the plugin or an older ExtPlane still installed. Only one can have it.</li>
+            <li><strong>Permission denied</strong> (error 10013) &mdash; on Windows, this means the port landed inside a range Windows reserved for itself. Jump to <a href="#reserved-range">Windows reserved port ranges</a>.</li>
+          </ul>
+          <p>No <code>ExtPlane-Plugin</code> lines at all means the plugin never loaded. Check where it sits:</p>
+          <pre>Resources/plugins/<em>your-folder-name</em>/64/win.xpl</pre>
+          <p>The folder name is entirely yours to choose &mdash; <code>extplane</code>, <code>AndroidPanel</code>, anything. What has to be exact is the <code>64</code> subfolder and the file inside it: <code>win.xpl</code> on Windows, <code>mac.xpl</code> on macOS, <code>lin.xpl</code> on Linux. Also confirm the plugin is enabled in X&#8209;Plane's Plugin Admin.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Test on the X&#8209;Plane computer first</h3>
+          <p>This separates a broken plugin from a blocked network. Run it on the computer itself, with X&#8209;Plane open:</p>
+          <div class="platforms">
+            <div class="platform">
+              <span class="plat-label">Windows</span>
+              <div class="plat-body">
+                <pre>netstat -an | findstr :51000
+Test-NetConnection localhost -Port 51000</pre>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">macOS</span>
+              <div class="plat-body">
+                <pre>lsof -nP -iTCP:51000 -sTCP:LISTEN
+nc -vz localhost 51000</pre>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">Linux</span>
+              <div class="plat-body">
+                <pre>ss -ltn | grep 51000
+nc -vz localhost 51000</pre>
+              </div>
+            </div>
+          </div>
+          <p>You want to see the port listed as listening on <code>0.0.0.0:51000</code>, and the connection test succeed.</p>
+          <p>If this step fails, stop here &mdash; the problem is the plugin, and no amount of network or firewall work will help.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Let the connection through the firewall</h3>
+          <p>The most common cause once the local test passes. A firewall usually discards traffic rather than refusing it, so its signature in the app is a <em>timeout</em> rather than "connection refused".</p>
+          <div class="platforms">
+            <div class="platform">
+              <span class="plat-label">Windows</span>
+              <div class="plat-body">
+                <p>Run as Administrator, on one line:</p>
+                <pre>netsh advfirewall firewall add rule name="ExtPlane 51000" dir=in action=allow protocol=TCP localport=51000</pre>
+                <p>Then set the Wi&#8209;Fi connection to <strong>Private</strong>, not Public &mdash; Windows blocks nearly all incoming connections on Public networks whatever your rules say.</p>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">macOS</span>
+              <div class="plat-body">
+                <p>The first time X&#8209;Plane opens the port, macOS asks whether to allow incoming connections. Clicking <strong>Deny</strong> causes exactly this problem, and it won't ask twice.</p>
+                <p>Fix it in System Settings &rarr; Network &rarr; Firewall &rarr; Options: find X&#8209;Plane and set it to allow incoming connections. If X&#8209;Plane isn't in the list, add it.</p>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">Linux</span>
+              <div class="plat-body">
+                <p>On Ubuntu and derivatives:</p>
+                <pre>sudo ufw allow 51000/tcp</pre>
+                <p>On Fedora, RHEL and openSUSE:</p>
+                <pre>sudo firewall-cmd --add-port=51000/tcp --permanent
+sudo firewall-cmd --reload</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Use the right address</h3>
+          <p>X&#8209;Plane will tell you its own addresses &mdash; no command line needed, and it looks the same on Windows, macOS and Linux. Open <strong>Settings &rarr; Network</strong> and read the list under <em>This Machine's IP Addresses</em>.</p>
+
+          <figure class="shot">
+            <img src="__SCREENSHOT__" alt="X-Plane's Settings window on the Network tab. Under the heading This Machine's IP Addresses it lists 192.168.1.100, 192.168.247.1, 192.168.42.1, 172.24.80.1, and three IPv6 addresses beginning fe80.">
+            <figcaption>Every address the computer has, in one place. You want the one on the same network as your tablet &mdash; here, <strong>192.168.1.100</strong>.</figcaption>
+          </figure>
+
+          <p>Home networks almost always put every device on <code>192.168.1.x</code> or <code>192.168.0.x</code>, so the right address usually begins the same way as your tablet's. You can check the tablet's own address in Android's Wi&#8209;Fi settings, under the network it's joined to &mdash; the first three numbers should match.</p>
+          <p>The rest of the list is noise. Addresses like <code>192.168.247.1</code> and <code>172.24.80.1</code> belong to virtual network adapters created by VirtualBox, VMware, Docker or WSL, and they lead nowhere. The <code>fe80::</code> entries are IPv6, which the app doesn't use.</p>
+          <p>If you'd rather read it from a terminal:</p>
+          <div class="platforms">
+            <div class="platform">
+              <span class="plat-label">Windows</span>
+              <div class="plat-body">
+                <pre>ipconfig</pre>
+                <p>Use the IPv4 Address of your real adapter &mdash; not a VirtualBox, VMware or Hyper&#8209;V one, which often appear first in the list.</p>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">macOS</span>
+              <div class="plat-body">
+                <pre>ipconfig getifaddr en0</pre>
+                <p>That's the Wi&#8209;Fi address on most Macs; try <code>en1</code> if it returns nothing, or read it from System Settings &rarr; Network.</p>
+              </div>
+            </div>
+            <div class="platform">
+              <span class="plat-label">Linux</span>
+              <div class="plat-body">
+                <pre>hostname -I
+ip addr show</pre>
+              </div>
+            </div>
+          </div>
+          <p>Things that regularly send people to the wrong number, on any platform:</p>
+          <ul>
+            <li>The computer on Ethernet while the tablet is on a guest or visitor Wi&#8209;Fi network</li>
+            <li><strong>Client isolation</strong> switched on at the router &mdash; standard on guest Wi&#8209;Fi, and it blocks all device&#8209;to&#8209;device traffic</li>
+            <li>A VPN running on either the computer or the tablet</li>
+            <li>The tablet on mobile data rather than Wi&#8209;Fi</li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Read the status line in the app</h3>
+          <p>Tap the gear and enter the computer's address. The line at the top of the app reports exactly what the connection attempt did &mdash; it's the fastest way to identify the cause. See the panel below for what each message means.</p>
+          <p>You don't need to restart anything while you work: the app retries every four seconds on its own and will connect the moment the path opens.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <h3>Rule out an older plugin</h3>
+          <p>Earlier versions of this plugin used port <strong>55000</strong> and a different greeting. The current app talks only to the current plugin. If the app was updated but the plugin wasn't, that mismatch is the failure &mdash; and it shows up as the message <em>"Incompatible X-Plane plugin version"</em>.</p>
+          <p>Remove any older plugin folder from <code>Resources/plugins/</code>, leave only the current one, and restart X&#8209;Plane.</p>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section class="advisory" id="reserved-range" aria-label="Windows reserved port ranges">
+    <h2>Windows reserved port ranges</h2>
+    <p>Windows sets aside blocks of network ports for its own use, and those blocks move around between restarts. Hyper&#8209;V, WSL, Docker Desktop and Windows Sandbox all cause this. If port 51000 happens to fall inside one of them, the plugin can't use it &mdash; even though no program is actually running there.</p>
+
+    <p class="sub">How to tell it's this</p>
+    <p><code>Log.txt</code> reports error <strong>10013</strong> and permission denied, rather than the port being in use:</p>
+    <pre>ExtPlane-Plugin: BIND FAILED on port 51000 (error 10013)
+ExtPlane-Plugin: Permission denied to bind to port 51000</pre>
+
+    <p class="sub">The fix</p>
+    <p>Claim the port for the plugin so Windows stops handing it out. In an <strong>Administrator</strong> Command Prompt or PowerShell:</p>
+    <pre>net stop winnat
+netsh int ipv4 add excludedportrange protocol=tcp startport=51000 numberofports=1
+net start winnat</pre>
+    <p class="note">Stop <code>winnat</code> first. If you add the reservation while it still holds the range, the command fails with an access-denied or file-in-use error &mdash; which is the usual outcome, since a held range is the whole problem.</p>
+
+    <p class="sub">Confirm it worked</p>
+    <pre>netsh int ipv4 show excludedportrange protocol=tcp</pre>
+    <p>Look for a line reading <code>51000&nbsp;&nbsp;&nbsp;51000</code> marked with an asterisk, meaning you reserved it deliberately. The reservation survives restarts, so this is a one-time fix.</p>
+    <p>Restart the computer, then check <code>Log.txt</code> again for <code>Listening on port 51000</code>.</p>
+
+    <p class="note">Windows only. macOS and Linux don't reserve ports this way.</p>
+  </section>
+
+  <section aria-label="What the app's messages mean">
+    <h2>What the message means</h2>
+    <div class="annunciators">
+
+      <div class="annunciator">
+        <div class="legend is-stop">Connection refused</div>
+        <div>
+          <p class="cause">You reached the computer, but nothing is listening.</p>
+          <p class="fix">The network is fine. Go back to step 1 &mdash; the plugin isn't loaded, isn't enabled, or couldn't claim the port. On Windows, check <a href="#reserved-range">reserved port ranges</a> too.</p>
+        </div>
+      </div>
+
+      <div class="annunciator">
+        <div class="legend is-caution">Connection timed out</div>
+        <div>
+          <p class="cause">Nothing answered at all.</p>
+          <p class="fix">Wrong address, the two devices are on different networks, or the firewall is discarding the connection. Steps 3 and 4.</p>
+        </div>
+      </div>
+
+      <div class="annunciator">
+        <div class="legend is-caution">Host unreachable</div>
+        <div>
+          <p class="cause">There's no route to that address from the tablet.</p>
+          <p class="fix">Almost always the wrong address, or the tablet on a different Wi&#8209;Fi network. Step 4.</p>
+        </div>
+      </div>
+
+      <div class="annunciator">
+        <div class="legend is-stop">Incompatible plugin version</div>
+        <div>
+          <p class="cause">An older plugin answered.</p>
+          <p class="fix">Install the current plugin and remove the old one. Step 6.</p>
+        </div>
+      </div>
+
+      <div class="annunciator">
+        <div class="legend is-ok">Connected to plugin</div>
+        <div>
+          <p class="cause">The link is up.</p>
+          <p class="fix">If instruments still read zero, X&#8209;Plane needs to be in a flight rather than sitting at a menu.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="cleared" aria-label="Already ruled out">
+    <h2>Not worth checking</h2>
+    <ul>
+      <li>The app's network permissions &mdash; they're granted at install and can't be switched off.</li>
+      <li>The port number in the app &mdash; it isn't adjustable, so it can't be wrong.</li>
+      <li>Android's block on unencrypted web traffic &mdash; it doesn't apply to the kind of connection this app makes.</li>
+    </ul>
+  </section>
+
+</div>
